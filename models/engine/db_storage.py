@@ -3,6 +3,7 @@
 import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import scoped_session
 import os
 
 
@@ -10,6 +11,7 @@ class DBStorage:
     """This class manages storage of hbnb models in database format"""
     __engine = None
     __session = None
+    __objects = {}
 
     def __init__(self):
         """Instantiate DBStorage class"""
@@ -36,19 +38,67 @@ class DBStorage:
 
         # Drop all tables if the environment variable HBNB_ENV is equal to test
 
-        def all(self, cls=None):
-            """Create a session to talk to or query current database"""
+    def all(self, cls=None):
+        """Create a session to talk to or query current database"""
 
-            # Define Session class to serve as factory for new Session objects
-            Session = sessionmaker(bind=self.__engine)
+        # Define Session class to serve as factory for new Session objects
+        Session = sessionmaker(bind=self.__engine)
 
-            # Create a new session
-            self.__session = Session()
+        # Create a new session
+        self.__session = Session()
 
-            # Query on current database session the object depending on cls
-            self.__session.query(cls)
+        # Query on current database session the object depending on cls
+        self.__session.query(cls)
+
+        #Query all types of objects if cls=None
+        if cls is None:
+            for i in [User, State, City, Amenity, Place, Review]:
+                obj = self.__session.query(i)
+                __objects.update({obj.to_dict()['__class__'] + '.' + obj.id: obj})
+
+        return DBStorage.__objects
+
+    def new(self, obj):
+        """Add object to current database session"""
+        self.__session.add_all(obj)
+
+    def save(self):
+        """Commit all changes of the current database session"""
+        self.__session.commit()
+
+    def delete(self, obj=None):
+        """Delete from current database session obj if not None"""
+        if obj is not None:
+            self.__session.rollback()
+        else:
+            pass
+
+    def reload(self):
+        """
+        Load all classes who inherit from Base and create all tables
+        in database
+        """
+        from models.base_model import Base
+        from models.base_model import BaseModel
+        from models.user import User
+        from models.place import Place
+        from models.state import State
+        from models.city import City
+        from models.amenity import Amenity
+        from models.review import Review
+
+        # Create all tables in database using MetaData.create_all()
+        Base.metadata.create_all(engine)
+
+        # Create the current database session by using sessionmaker
+        session_factory = sessionmaker(bind=self.__engine, expire_on_commit=False)
+
+        # Create a scoped_session object to make my Session thread-safe
+        Session = scoped_session(session_factory)
+
+        # Create session
+        self.__session = Session()
 
 
-
-if __name__ = '__main__':
+if __name__ == '__main__':
     pass
