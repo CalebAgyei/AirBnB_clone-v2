@@ -16,22 +16,22 @@ class DBStorage:
     def __init__(self):
         """Instantiate DBStorage class"""
 
-        # Create a new engine to MySQL
-        self.__engine = create_engine(
-                "mysql+mysqldb://hbnb_dev@localhost/hbnb_dev_db",
-                encoding='latin1', echo=True, pool_pre_ping=True)
-
-        # Set environment variables
-        os.environ['HBNB_MYSQL_USER'] = 'hbnb_dev'
-        os.environ['HBNB_MYSQL_PWD'] = 'hbnb_dev_pwd'
-        os.environ['HBNB_MYSQL_HOST'] = 'localhost'
-        os.environ['HBNB_MYSQL_DB'] = 'hbnb_dev_db'
-
         # Retrieve environment variables
         HBNB_MYSQL_USER = os.getenv('HBNB_MYSQL_USER')
         HBNB_MYSQL_PWD = os.getenv('HBNB_MYSQL_PWD')
         HBNB_MYSQL_HOST = os.getenv('HBNB_MYSQL_HOST')
         HBNB_MYSQL_DB = os.getenv('HBNB_MYSQL_DB')
+
+        # Create a new engine to MySQL
+        self.__engine = create_engine(
+                "mysql+mysqldb://hbnb_dev:hbnb_dev_pwd@localhost/hbnb_dev_db",
+                encoding='latin1', echo=True, pool_pre_ping=True)
+
+        # Set environment variables
+        # os.environ['HBNB_MYSQL_USER'] = 'hbnb_dev'
+        # os.environ['HBNB_MYSQL_PWD'] = 'hbnb_dev_pwd'
+        # os.environ['HBNB_MYSQL_HOST'] = 'localhost'
+        # os.environ['HBNB_MYSQL_DB'] = 'hbnb_dev_db'
 
         # Make a connection to the database
         self.__engine.connect()
@@ -88,7 +88,7 @@ class DBStorage:
         from models.review import Review
 
         # Create all tables in database using MetaData.create_all()
-        Base.metadata.create_all(engine)
+        Base.metadata.create_all(self.__engine)
 
         # Create the current database session by using sessionmaker
         session_factory = sessionmaker(bind=self.__engine, expire_on_commit=False)
